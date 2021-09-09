@@ -7,10 +7,12 @@ import 'package:maps/logics/maps_cubit/maps_states.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class MapScreen extends StatelessWidget {
+  GoogleMapController? controller ;
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => MapsCubit()
+      create: (context) =>
+      MapsCubit()
         ..getPosition(context)
         ..getPositionStream(),
       child: BlocConsumer<MapsCubit, MapsStates>(
@@ -20,7 +22,7 @@ class MapScreen extends StatelessWidget {
         },
         builder: (context, state) {
           var cubit = MapsCubit.get(context);
-          GoogleMapController? controller;
+
           return Scaffold(
             drawer: Drawer(
               child: Column(
@@ -68,7 +70,9 @@ class MapScreen extends StatelessWidget {
                     ),
                   ),
                   ListTile(
-                    onTap: () {cubit.languageFun(context);},
+                    onTap: () {
+                      cubit.languageFun(context);
+                    },
                     title: Text('language'.tr()),
                     trailing: Icon(Icons.language),
                   ),
@@ -140,42 +144,46 @@ class MapScreen extends StatelessWidget {
             ),
             body: cubit.position == null
                 ? Center(
-                    child: CircularProgressIndicator(),
-                  )
+              child: CircularProgressIndicator(),
+            )
                 : Stack(
-                    children: [
-                      GoogleMap(
-                        polylines: Set<Polyline>.of(cubit.polylines.values),
-                        zoomControlsEnabled: false,
-                        mapType: MapType.normal,
-                        initialCameraPosition: cubit.cameraPosition!,
-                        onMapCreated: (googleMapController) =>
-                            controller = googleMapController,
-                        markers: cubit.myMarker,
-                        onTap: (LatLng latLang) =>
-                            cubit.getSecondMarkers(latLang),
+              children: [
+                GoogleMap(
+                  polylines: Set<Polyline>.of(cubit.polylines.values),
+                  zoomControlsEnabled: false,
+                  mapType: MapType.normal,
+                  initialCameraPosition: cubit.cameraPosition!,
+                  onMapCreated: (googleMapController)  {
+                    controller =  googleMapController;
+                  },
+                  markers: cubit.myMarker,
+                  onTap: (LatLng latLang) =>
+                      cubit.getSecondMarkers(latLang),
+                ),
+                if (cubit.placeMarks != null)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Container(
+                      width: MediaQuery
+                          .of(context)
+                          .size
+                          .width / 2,
+                      height: 50.0,
+                      alignment: Alignment.topLeft,
+                      child: Center(
+                        child: Text(
+                          '${cubit.placeMarks!.last.name}',
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
                       ),
-                      if (cubit.placeMarks != null)
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Container(
-                            width: MediaQuery.of(context).size.width / 2,
-                            height: 50.0,
-                            alignment: Alignment.topLeft,
-                            child: Center(
-                              child: Text(
-                                '${cubit.placeMarks!.last.name}',
-                                style: TextStyle(fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8.0),
-                              color: Colors.grey[300],
-                            ),
-                          ),
-                        )
-                    ],
-                  ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.0),
+                        color: Colors.grey[300],
+                      ),
+                    ),
+                  )
+              ],
+            ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
                 controller!.animateCamera(CameraUpdate.newCameraPosition(
